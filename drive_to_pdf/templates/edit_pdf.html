@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/scripts.js"></script>
+    <title>PDF Bearbeiten</title>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Dokumentation</h2>
+        <a href="/">PDF erstellen</a>
+        <a href="/manage">PDF bearbeiten</a>
+    </div>
+    <div class="content">
+        <a href="/manage" class="back-arrow">&#8592; Zurück</a>
+        <h1>PDF Bearbeiten: {{ filename }}</h1>
+        <form action="{{ url_for('save', filename=filename) }}" method="post">
+            <label for="customer_name">Kundenname:</label>
+            <input type="text" id="customer_name" name="customer_name" value="{{ config.customer_name }}">
+            <div class="toc">
+                <h2>Inhaltsverzeichnis</h2>
+                {% for item in config.table_of_contents %}
+                <div class="toc-item">
+                    <label for="toc_title_{{ loop.index }}">Titel:</label>
+                    <input type="text" id="toc_title_{{ loop.index }}" name="toc_title" value="{{ item.title }}">
+                    <label for="toc_files_{{ loop.index }}">Dateien (kommagetrennt):</label>
+                    <input type="text" id="toc_files_{{ loop.index }}" name="toc_files" value="{{ item.files | join(', ') }}">
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit">Speichern</button>
+        </form>
+        <iframe src="/static/pdf_output/{{ filename }}" width="600" height="400"></iframe>
+    </div>
+    <div id="snackbar"></div>
+</body>
+</html>

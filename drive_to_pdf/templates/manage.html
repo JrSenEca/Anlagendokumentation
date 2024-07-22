@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>PDF verwalten</title>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Dokumentation</h2>
+        <a href="/">PDF erstellen</a>
+        <a href="/manage">PDF bearbeiten</a>
+    </div>
+    <div class="content">
+        <h1>PDF verwalten</h1>
+        <div class="pdf-list">
+            {% for pdf in pdf_files %}
+                <div class="pdf-item">
+                    <span>{{ pdf }}</span>
+                    <div class="pdf-actions">
+                        <a class="btn" href="{{ url_for('edit', filename=pdf) }}">Bearbeiten</a>
+                        <a class="btn" href="{{ url_for('download', filename=pdf) }}">Download</a>
+                        <form action="{{ url_for('delete_file') }}" method="post" class="inline-form" onsubmit="return confirm('Bist du sicher, dass du diese Datei löschen möchtest?');">
+                            <input type="hidden" name="filename" value="{{ pdf }}">
+                            <button type="submit" class="btn delete-btn">Löschen</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+</body>
+</html>

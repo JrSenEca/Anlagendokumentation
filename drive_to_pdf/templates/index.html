@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/styles.css">
+    <script src="static/scripts.js"></script>
+    <title>PDF Management</title>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Dokumentation</h2>
+        <a href="/">PDF erstellen</a>
+        <a href="/manage">PDF bearbeiten</a>
+    </div>
+    <div class="content">
+        <h1>PDF erstellen</h1>
+        <form id="generate-form" action="/generate" method="post">
+            <label for="folder_id">Ordner-ID:</label>
+            <input type="text" id="folder_id" name="folder_id">
+            <button type="submit">PDF erstellen</button>
+        </form>
+        <div id="status-message" class="status"></div>
+    </div>
+    <div id="snackbar"></div>
+    <script>
+        document.getElementById('generate-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var form = event.target;
+            var formData = new FormData(form);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', form.action, true);
+            xhr.onload = function() {
+                var response = JSON.parse(xhr.responseText);
+                if (response.success) {
+                    showSnackbar("PDF wurde erfolgreich erstellt.");
+                    showStatusMessage("PDF wurde erfolgreich erstellt. <a href='/manage'>Hier klicken, um zu bearbeiten</a>");
+                } else {
+                    showSnackbar("Fehler: " + response.error);
+                }
+            };
+            xhr.send(formData);
+            showStatusMessage("Bitte warten Sie, während die PDF erstellt wird...");
+        });
+
+        function showStatusMessage(message) {
+            var statusMessage = document.getElementById("status-message");
+            statusMessage.innerHTML = message;
+        }
+    </script>
+</body>
+</html>

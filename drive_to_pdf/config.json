@@ -1,0 +1,72 @@
+{
+    "customer_name": "Kundenname",
+    "table_of_contents": [
+        {
+            "title": "Bilder - Aufmaß",
+            "files": [
+                "Fotos_Aufmaß/image1.jpg",
+                "Fotos_Aufmaß/image2.jpg"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Statikbericht",
+            "folders": [
+                "Planung",
+                "Planungen"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Material-Liste der Unterkonstruktion",
+            "pages": ""
+        },
+        {
+            "title": "Elektroplanung",
+            "files": [
+                "Elektro/Anlagenplanung 2D.pdf"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Datenblätter der Komponenten",
+            "pages": ""
+        },
+        {
+            "title": "Bilder - DC-Montage",
+            "folders": [
+                "Fotos_Montage",
+                "Fotos_DC-Montage"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Abnahmeprotokoll (DC-Montage)",
+            "pages": ""
+        },
+        {
+            "title": "Netzanmeldung",
+            "folders": [
+                "Netzanmeldung",
+                "Netzanmeldungen"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Kontaktdaten",
+            "pages": ""
+        },
+        {
+            "title": "Rechnungen",
+            "folders": [
+                "Rechnung",
+                "Rechnungen"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Weitere Dokumente",
+            "pages": ""
+        }
+    ]
+}

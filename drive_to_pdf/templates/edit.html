@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>PDF Bearbeiten</title>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Dokumentation</h2>
+        <a href="{{ url_for('index') }}">PDF erstellen</a>
+        <a href="{{ url_for('manage') }}">PDF bearbeiten</a>
+    </div>
+    <div class="content">
+        <a href="{{ url_for('manage') }}" class="back-arrow">&larr;</a>
+        <h1>PDF Bearbeiten: {{ filename }}</h1>
+        <div class="content-wrapper">
+            <div class="left-column">
+                <form id="customer-name-form">
+                    <label for="customer_name">Kundenname:</label>
+                    <input type="text" id="customer_name" name="customer_name">
+                    <button type="submit" class="pdf-button">Kundenname speichern</button>
+                </form>
+
+                <div class="section-container">
+                    <h3>Inhaltsverzeichnis</h3>
+                    {% for item in config['table_of_contents'] %}
+                        <div class="toc-item">
+                            <label>{{ item['title'] }}</label>
+                            <input type="text" value="{{ item['pages'] }}" disabled>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="section-container">
+                    <h3>Dateien hochladen</h3>
+                    <form id="upload-form" enctype="multipart/form-data">
+                        <label for="section">Sektion:</label>
+                        <select id="section" name="section">
+                            {% for item in config['table_of_contents'] %}
+                                <option value="{{ item['title'] }}">{{ item['title'] }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="dropzone" id="dropzone">Dateien hier ablegen oder klicken</div>
+                        <button type="submit" class="pdf-button">Hochladen</button>
+                    </form>
+                    <div id="uploaded-files"></div>
+                </div>
+            </div>
+            <div class="right-column">
+                <iframe id="pdf-viewer" src="{{ url_for('view_pdf', filename=filename) }}"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="snackbar"></div>
+
+    <script>
+        document.getElementById('customer-name-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var form = event.target;
+            var formData = new FormData(form);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/save_customer_name', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function() {
+                var response = JSON.parse(xhr.responseText);
+                if (response.new_filename) {
+                    document.getElementById('filename').innerText = response.new_filename;
+                    form.reset();
+                } else {
+                    showSnackbar("Fehler: " + response.error);
+                }
+            };
+            var customerName = formData.get('customer_name');
+            var filename = document.getElementById('filename').innerText;
+            xhr.send(JSON.stringify({customer_name: customerName, filename: filename}));
+        });
+
+        document.getElementById('upload-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var form = event.target;
+            var formData = new FormData(form);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+            xhr.onload = function() {
+                var response = JSON.parse(xhr.responseText);
+                if (response.success) {
+                    showSnackbar("Dateien erfolgreich hochgeladen.");
+                    form.reset();
+                } else {
+                    showSnackbar("Fehler beim Hochladen der Dateien.");
+                }
+            };
+            xhr.send(formData);
+        });
+
+        function showSnackbar(message) {
+            var snackbar = document.getElementById("snackbar");
+            snackbar.innerText = message;
+            snackbar.className = "show";
+            setTimeout(function() { snackbar.className = snackbar.className.replace("show", ""); }, 3000);
+        }
+    </script>
+</body>
+</html>
