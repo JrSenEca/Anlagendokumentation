@@ -3,12 +3,12 @@ from PyPDF2 import PdfMerger, PdfReader
 from PIL import Image, ImageDraw, ImageFont
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-import openpyxl
 from docx import Document
 import json
 from tqdm import tqdm
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
+import traceback
 
 gauth = GoogleAuth()
 gauth.LoadCredentialsFile("mycreds.txt")
@@ -24,6 +24,10 @@ drive = GoogleDrive(gauth)
 PDF_OUTPUT_DIR = (
     "/Users/marie-luiseherrmann/Anlagendokumentation/drive_to_pdf/static/pdf_output"
 )
+
+
+def ensure_output_dir(output_dir):
+    os.makedirs(output_dir, exist_ok=True)
 
 
 def create_cover_page(title, customer_name, output_path):
@@ -95,25 +99,6 @@ def download_files(folder_id, download_path):
             file.GetContentFile(file_path)
 
 
-def convert_excel_to_pdf(excel_path, pdf_path):
-    workbook = openpyxl.load_workbook(excel_path)
-    sheet = workbook.active
-
-    c = canvas.Canvas(pdf_path, pagesize=letter)
-    width, height = letter
-
-    y = height - 40
-    for row in sheet.iter_rows(values_only=True):
-        for cell in row:
-            c.drawString(40, y, str(cell))
-            y -= 15
-            if y < 40:
-                c.showPage()
-                y = height - 40
-
-    c.save()
-
-
 def convert_docx_to_pdf(docx_path, pdf_path):
     doc = Document(docx_path)
     c = canvas.Canvas(pdf_path, pagesize=letter)
@@ -132,22 +117,37 @@ def convert_docx_to_pdf(docx_path, pdf_path):
 
 def add_files_to_merger(merger, files):
     for file_path in files:
-        if file_path.endswith(".pdf"):
-            merger.append(file_path)
-        elif file_path.endswith(".xlsx"):
-            pdf_path = file_path.rsplit(".", 1)[0] + ".pdf"
-            convert_excel_to_pdf(file_path, pdf_path)
-            merger.append(pdf_path)
+        if os.path.isdir(file_path):
+            # Rekursiv Unterordner durchsuchen
+            sub_files = [os.path.join(file_path, f) for f in os.listdir(file_path)]
+            add_files_to_merger(merger, sub_files)
+        elif file_path.endswith(".pdf"):
+            try:
+                reader = PdfReader(file_path)
+                merger.append(reader)
+            except Exception as e:
+                print(f"Fehler beim Hinzufügen der PDF-Datei {file_path}: {e}")
+                traceback.print_exc()
         elif file_path.endswith(".docx"):
-            pdf_path = file_path.rsplit(".", 1)[0] + ".pdf"
-            convert_docx_to_pdf(file_path, pdf_path)
-            merger.append(pdf_path)
+            try:
+                pdf_path = file_path.rsplit(".", 1)[0] + ".pdf"
+                convert_docx_to_pdf(file_path, pdf_path)
+                add_files_to_merger(merger, [pdf_path])
+            except Exception as e:
+                print(f"Fehler beim Konvertieren der Word-Datei {file_path}: {e}")
+                traceback.print_exc()
         elif any(file_path.lower().endswith(ext) for ext in [".jpg", ".jpeg", ".png"]):
-            img = Image.open(file_path)
-            img = img.convert("RGB")
-            pdf_path = file_path.rsplit(".", 1)[0] + ".pdf"
-            img.save(pdf_path)
-            merger.append(pdf_path)
+            try:
+                img = Image.open(file_path)
+                img = img.convert("RGB")
+                pdf_path = file_path.rsplit(".", 1)[0] + ".pdf"
+                img.save(pdf_path)
+                add_files_to_merger(merger, [pdf_path])
+            except Exception as e:
+                print(f"Fehler beim Konvertieren der Bild-Datei {file_path}: {e}")
+                traceback.print_exc()
+        elif file_path.endswith(".xlsx"):
+            print(f"Überspringe Excel-Datei: {file_path}")
         else:
             print(f"Überspringe nicht unterstützte Datei: {file_path}")
 
@@ -159,11 +159,15 @@ def merge_pdfs(output_path, download_path, config):
 
     cover_page_path = os.path.join(download_path, "cover_page.pdf")
     create_cover_page("Projektbericht", customer_name, cover_page_path)
-    merger.append(cover_page_path)
+    if os.path.exists(cover_page_path):
+        merger.append(cover_page_path)
+    else:
+        print("Deckblatt konnte nicht erstellt werden, überspringe.")
 
     toc = config.get("table_of_contents", [])
     all_files = set(os.listdir(download_path))
     assigned_files = set()
+    section_number = 1
 
     predefined_sections = [
         {"title": "Bilder - Aufmaß", "folders": ["Fotos_Aufmaß"]},
@@ -184,36 +188,80 @@ def merge_pdfs(output_path, download_path, config):
         {"title": "Kontaktdaten", "folders": []},
     ]
 
-    for section in predefined_sections:
-        section_title = section["title"]
-        section_path = os.path.join(download_path, section_title + ".pdf")
-        create_title_page(section_title, section_path)
-        merger.append(section_path)
-
-        for folder_name in section["folders"]:
+    def add_files_from_folders(merger, folder_names, download_path):
+        for folder_name in folder_names:
             folder_path = os.path.join(download_path, folder_name)
             if os.path.isdir(folder_path):
-                files_to_add = [
-                    os.path.join(folder_path, f)
-                    for f in os.listdir(folder_path)
-                    if os.path.isfile(os.path.join(folder_path, f))
-                ]
-                assigned_files.update(files_to_add)
-                add_files_to_merger(merger, files_to_add)
+                for root, dirs, files in os.walk(folder_path):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        if any(
+                            file_path.endswith(ext)
+                            for ext in [".pdf", ".docx", ".jpg", ".jpeg", ".png"]
+                        ):
+                            add_files_to_merger(merger, [file_path])
+                            assigned_files.add(file_path)
+
+    for section in predefined_sections:
+        section_title = section.get("title", "")
+        section_path = os.path.join(
+            download_path, f"{section_number}_{section_title}.pdf"
+        )
+        try:
+            create_title_page(section_title, section_path)
+            if os.path.exists(section_path):
+                merger.append(section_path)
+            else:
+                print(
+                    f"Fehler beim Erstellen des Titelblatts für {section_title}, überspringe."
+                )
+        except Exception as e:
+            print(f"Fehler beim Erstellen des Titelblatts für {section_title}: {e}")
+            traceback.print_exc()
+
+        if "folders" in section:
+            add_files_from_folders(merger, section["folders"], download_path)
+
+        section_number += 1
 
     unassigned_files = all_files - assigned_files
     if unassigned_files:
-        section_path = os.path.join(download_path, "Weitere Dokumente.pdf")
-        create_title_page("Weitere Dokumente", section_path)
-        merger.append(section_path)
-        for file_title in unassigned_files:
-            file_path = os.path.join(download_path, file_title)
-            if os.path.isfile(file_path):
-                add_files_to_merger(merger, [file_path])
+        section_path = os.path.join(
+            download_path, f"{section_number}_Weitere Dokumente.pdf"
+        )
+        try:
+            create_title_page("Weitere Dokumente", section_path)
+            if os.path.exists(section_path):
+                merger.append(section_path)
+            else:
+                print(
+                    f"Fehler beim Erstellen des Titelblatts für Weitere Dokumente, überspringe."
+                )
+        except Exception as e:
+            print(f"Fehler beim Erstellen des Titelblatts für Weitere Dokumente: {e}")
+            traceback.print_exc()
 
-    with open(output_path, "wb") as f_out:
-        merger.write(f_out)
-    print("PDF wurde erfolgreich erstellt.")
+        for file in unassigned_files:
+            file_path = os.path.join(download_path, file)
+            if os.path.isfile(file_path):
+                try:
+                    add_files_to_merger(merger, [file_path])
+                except Exception as e:
+                    print(
+                        f"Fehler beim Hinzufügen der Datei {file_path} für Weitere Dokumente: {e}"
+                    )
+                    traceback.print_exc()
+
+    try:
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        merger.write(output_path)
+        print(f"PDF erfolgreich erstellt: {output_path}")
+    except Exception as e:
+        print(f"Fehler beim Schreiben der endgültigen PDF: {e}")
+        traceback.print_exc()
+    finally:
+        merger.close()
+        print("Zusammenfügen der PDFs abgeschlossen.")
 
 
 def create_pdf(folder_id, download_path, output_path):

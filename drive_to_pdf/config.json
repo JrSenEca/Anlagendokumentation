@@ -24,9 +24,13 @@
         {
             "title": "Elektroplanung",
             "files": [
-                "Elektro/Anlagenplanung 2D.pdf"
+                "Elektro/Anlagenplanung 2D.pdf",
+                "PV SOL Anlagenplanung {customer_name}.pdf",
+                "PV SOL Planung {customer_name}.pdf"
             ],
-            "pages": ""
+            "folders": ["AC-Montage","Planung", "Planungen"
+            ],
+                 "pages": ""
         },
         {
             "title": "Datenblätter der Komponenten",
@@ -36,7 +40,9 @@
             "title": "Bilder - DC-Montage",
             "folders": [
                 "Fotos_Montage",
-                "Fotos_DC-Montage"
+                "DC-Montage/Fotos_DC-Montage",
+                "AC-Montage/Fotos_PV-Anlage",
+                "AC-Montage/Fotos_DC-Montage"
             ],
             "pages": ""
         },
@@ -45,10 +51,19 @@
             "pages": ""
         },
         {
+            "title": "Bilder - AC-Montage",
+            "folders": [
+                "AC-Montage/Fotos_AC-Montage",
+                "AC-Montag {customer_name}/Fotos_AC-Montage"
+            ],
+            "pages": ""
+        },
+        {
             "title": "Netzanmeldung",
             "folders": [
                 "Netzanmeldung",
-                "Netzanmeldungen"
+                "Netzanmeldungen",
+                "MaStR"
             ],
             "pages": ""
         },

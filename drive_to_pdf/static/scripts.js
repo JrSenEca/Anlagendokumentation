@@ -8,7 +8,7 @@ document.getElementById('generate-form').addEventListener('submit', function(eve
         var response = JSON.parse(xhr.responseText);
         if (response.success) {
             showSnackbar("PDF wurde erfolgreich erstellt.");
-            showStatusMessage("PDF wurde erfolgreich erstellt. <a href='/manage'>Hier klicken, um zu bearbeiten</a>");
+            showStatusMessage("PDF wurde erfolgreich erstellt. <a href='/edit/" + response.filename + "'>Hier klicken, um zu bearbeiten</a>");
         } else {
             showSnackbar("Fehler: " + response.error);
         }
@@ -34,6 +34,7 @@ document.getElementById('customer-name-form').addEventListener('submit', functio
         if (response.new_filename) {
             document.getElementById('filename').innerText = response.new_filename;
             form.reset();
+            document.getElementById('pdf-viewer').src = "/static/pdf_output/" + response.new_filename;
         } else {
             showSnackbar("Fehler: " + response.error);
         }

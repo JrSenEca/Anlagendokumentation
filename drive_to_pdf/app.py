@@ -1,3 +1,4 @@
+import os
 from flask import (
     Flask,
     render_template,
@@ -7,22 +8,40 @@ from flask import (
     send_from_directory,
     jsonify,
 )
-import os
 from flask_cors import CORS
-from merge_drive_files import create_pdf, load_config, save_config
+from merge_drive_files import create_pdf, load_config, save_config, PDF_OUTPUT_DIR
+
+# Google Drive Authentication
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+
+gauth = GoogleAuth()
+gauth.LoadCredentialsFile("mycreds.txt")
+if gauth.credentials is None or gauth.access_token_expired:
+    gauth.LocalWebserverAuth()
+    if gauth.access_token_expired:
+        gauth.Refresh()
+    else:
+        gauth.LocalWebserverAuth()
+    gauth.SaveCredentialsFile("mycreds.txt")
+drive = GoogleDrive(gauth)
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-PDF_OUTPUT_DIR = (
-    "/Users/marie-luiseherrmann/Anlagendokumentation/drive_to_pdf/static/pdf_output"
-)
+
 DOWNLOAD_DIR = "downloads"
 
 
 def ensure_output_dir():
     if not os.path.exists(PDF_OUTPUT_DIR):
         os.makedirs(PDF_OUTPUT_DIR)
+
+
+def get_folder_name(folder_id):
+    file = drive.CreateFile({"id": folder_id})
+    file.FetchMetadata(fields="title")
+    return file["title"]
 
 
 @app.route("/")
@@ -34,11 +53,13 @@ def index():
 def generate():
     folder_id = request.form.get("folder_id")
     if folder_id:
-        download_path = os.path.join(DOWNLOAD_DIR, folder_id)
-        output_file = os.path.join(PDF_OUTPUT_DIR, f"{folder_id}_Projektbericht.pdf")
-        create_pdf(folder_id, download_path, output_file)
-        return redirect(url_for("index"))
-    return "Fehler: Bitte geben Sie eine gültige Ordner-ID ein."
+        create_pdf(folder_id, DOWNLOAD_DIR, PDF_OUTPUT_DIR)
+        folder_name = get_folder_name(folder_id)
+        filename = f"Anlagendokumentation_{folder_name}.pdf"
+        return jsonify({"success": True, "filename": filename})
+    return jsonify(
+        {"success": False, "error": "Bitte geben Sie eine gültige Ordner-ID ein."}
+    )
 
 
 @app.route("/manage")
@@ -50,20 +71,6 @@ def manage():
 
 @app.route("/edit/<filename>", methods=["GET", "POST"])
 def edit(filename):
-    if request.method == "POST":
-        config = {
-            "customer_name": request.form.get("customer_name"),
-            "table_of_contents": [],
-        }
-        toc_titles = request.form.getlist("toc_title")
-        toc_pages = request.form.getlist("toc_pages")
-
-        for title, pages in zip(toc_titles, toc_pages):
-            config["table_of_contents"].append({"title": title, "pages": pages})
-
-        save_config(config)
-        return redirect(url_for("manage"))
-
     config = load_config()
     return render_template("edit.html", config=config, filename=filename)
 
@@ -99,7 +106,8 @@ def save_customer_name():
     customer_name = data["customer_name"]
     filename = data["filename"]
 
-    new_filename = f"Anlagendokumentation_{customer_name}.pdf"
+    base_name, ext = os.path.splitext(filename)
+    new_filename = f"Anlagendokumentation_{customer_name}{ext}"
     old_filepath = os.path.join(PDF_OUTPUT_DIR, filename)
     new_filepath = os.path.join(PDF_OUTPUT_DIR, new_filename)
 
@@ -121,4 +129,4 @@ def view_pdf(filename):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5002)
