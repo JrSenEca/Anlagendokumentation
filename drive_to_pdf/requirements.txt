@@ -1,0 +1,10 @@
+Flask
+PyDrive2
+openpyxl
+python-docx
+pillow
+PyPDF2
+tqdm
+flask-cors
+fpdf
+reportlab

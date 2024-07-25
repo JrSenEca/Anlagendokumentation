@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>PDF Anzeigen</title>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Dokumentation</h2>
+        <a href="/">PDF erstellen</a>
+        <a href="/manage">PDF bearbeiten</a>
+    </div>
+    <div class="content">
+        <h1>PDF Anzeigen</h1>
+        <iframe src="/static/pdf_output/{{ filename }}" width="600" height="400"></iframe>
+    </div>
+</body>
+</html>

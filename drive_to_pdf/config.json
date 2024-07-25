@@ -1,0 +1,87 @@
+{
+    "customer_name": "Kundenname",
+    "table_of_contents": [
+        {
+            "title": "Bilder - Aufmaß",
+            "files": [
+                "Fotos_Aufmaß/image1.jpg",
+                "Fotos_Aufmaß/image2.jpg"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Statikbericht",
+            "folders": [
+                "Planung",
+                "Planungen"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Material-Liste der Unterkonstruktion",
+            "pages": ""
+        },
+        {
+            "title": "Elektroplanung",
+            "files": [
+                "Elektro/Anlagenplanung 2D.pdf",
+                "PV SOL Anlagenplanung {customer_name}.pdf",
+                "PV SOL Planung {customer_name}.pdf"
+            ],
+            "folders": ["AC-Montage","Planung", "Planungen"
+            ],
+                 "pages": ""
+        },
+        {
+            "title": "Datenblätter der Komponenten",
+            "pages": ""
+        },
+        {
+            "title": "Bilder - DC-Montage",
+            "folders": [
+                "Fotos_Montage",
+                "DC-Montage/Fotos_DC-Montage",
+                "AC-Montage/Fotos_PV-Anlage",
+                "AC-Montage/Fotos_DC-Montage"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Abnahmeprotokoll (DC-Montage)",
+            "pages": ""
+        },
+        {
+            "title": "Bilder - AC-Montage",
+            "folders": [
+                "AC-Montage/Fotos_AC-Montage",
+                "AC-Montag {customer_name}/Fotos_AC-Montage"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Netzanmeldung",
+            "folders": [
+                "Netzanmeldung",
+                "Netzanmeldungen",
+                "MaStR"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Kontaktdaten",
+            "pages": ""
+        },
+        {
+            "title": "Rechnungen",
+            "folders": [
+                "Rechnung",
+                "Rechnungen"
+            ],
+            "pages": ""
+        },
+        {
+            "title": "Weitere Dokumente",
+            "pages": ""
+        }
+    ]
+}

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>PDF Bearbeiten</title>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Dokumentation</h2>
+        <a href="{{ url_for('index') }}">PDF erstellen</a>
+        <a href="{{ url_for('manage') }}">PDF bearbeiten</a>
+    </div>
+    <div class="content">
+        <a href="{{ url_for('manage') }}" class="back-arrow">&larr;</a>
+        <h1>PDF Bearbeiten: <span id="filename">{{ filename }}</span></h1>
+        <div class="content-wrapper">
+            <div class="left-column">
+                <form id="customer-name-form">
+                    <label for="customer_name">Kundenname:</label>
+                    <input type="text" id="customer_name" name="customer_name">
+                    <button type="submit" class="pdf-button">Kundenname speichern</button>
+                </form>
+
+                <div class="section-container">
+                    <h3>Inhaltsverzeichnis</h3>
+                    {% if config and config['table_of_contents'] %}
+                        {% for item in config['table_of_contents'] %}
+                            <div class="toc-item">
+                                <label>{{ item['title'] }}</label>
+                                <input type="text" value="{{ item['pages'] }}" disabled>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>Keine Einträge im Inhaltsverzeichnis vorhanden.</p>
+                    {% endif %}
+                </div>
+
+                <div class="section-container">
+                    <h3>Dateien hochladen</h3>
+                    <form id="upload-form" enctype="multipart/form-data">
+                        <label for="section">Sektion:</label>
+                        <select id="section" name="section">
+                            {% if config and config['table_of_contents'] %}
+                                {% for item in config['table_of_contents'] %}
+                                    <option value="{{ item['title'] }}">{{ item['title'] }}</option>
+                                {% endfor %}
+                            {% else %}
+                                <option value="">Keine Sektionen vorhanden</option>
+                            {% endif %}
+                        </select>
+                        <div class="dropzone" id="dropzone" data-section="">
+                            Dateien hier ablegen oder klicken
+                        </div>
+                        <button type="submit" class="pdf-button">Hochladen</button>
+                    </form>
+                    <div id="uploaded-files"></div>
+                </div>
+            </div>
+            <div class="right-column">
+                <iframe id="pdf-viewer" src="{{ url_for('view_pdf', filename=filename) }}" width="800" height="1000"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="snackbar"></div>
+
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+</body>
+</html>
